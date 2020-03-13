@@ -17,9 +17,10 @@ fun tlsHandshake(host: String) {
     os.write(clientReqMaker.makeClientHello())
 
     try {
+        val serverResponse1 = ServerResponse1()
         val bufferIns = BufferedInputStream(ins)
         while (true) {
-            ServerResponse1().parse(bufferIns)
+            serverResponse1.parse(bufferIns)
         }
     } catch (e: Exception) {
         e.printStackTrace()
