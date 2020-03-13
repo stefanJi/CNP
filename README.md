@@ -6,17 +6,6 @@
 
 A collection of network utilities code implement by cpp in OSX.
 
-### Build
-
-- `make`
-- `make arp`
-- `make ping`
-
-### Run
-
-`build/arp <ip>`
-
-`build/ping <host> <ping times>`
 
 ## [TLSImpl](./TLSImpl)
 
