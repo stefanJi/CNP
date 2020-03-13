@@ -1,6 +1,4 @@
-import section.HandshakeData
-import section.TLSPlaintext
-import section.TlsRandomHeader
+import model.*
 import kotlin.random.Random
 
 /**
@@ -16,29 +14,21 @@ class ClientReqMaker : ClientFlow {
         randomTime = (System.currentTimeMillis() / 1000L).toInt()
         random = Random(10).nextBytes(28)
 
-        fun makeCipher(): ByteArray {
-            val cipherSuites = ByteArray(2/*every cipher suite 2 bytes*/ * CipherSuite.values().size)
-            var index = 0
-            CipherSuite.values().forEach {
-                cipherSuites[index++] = (it.type shr 8 and 0xFF).toByte()
-                cipherSuites[index++] = (it.type and 0xFF).toByte()
-            }
-            return cipherSuites
-        }
+        val sessionId = ByteArray(0)
 
-        val clientHello = section.ClientHello(TLS_VERSION_MAJOR, TLS_VERSION_MINOR,
-            TlsRandomHeader(randomTime, random), ByteArray(0),
-            makeCipher(),
-            ByteArray(1) { 0 })
-
-        val handshakeData = HandshakeData(HandshakeType.client_hello, clientHello)
-        val tlsPlaintext = TLSPlaintext(
-            ContentType.handshake,
-            TLS_VERSION_MAJOR,
-            TLS_VERSION_MINOR,
-            handshakeData
+        val clientHello = tls_flow.ClientHello(
+            Version.Desc.V1_2,
+            TlsRandomHeader(randomTime, random), sessionId,
+            CipherSuite.Type.values().map { CipherSuite(it) }.toTypedArray(),
+            arrayOf(CompressionMethod(CompressionMethod.Type.NULL))
         )
-        return tlsPlaintext.data().array()
+        val handshakeData = HandshakeData(HandshakeType.Type.client_hello, clientHello.data())
+        val tlsPlaintext = TLSPlaintext(
+            ContentType.Type.handshake,
+            Version.Desc.V1_2,
+            handshakeData.data()
+        )
+        return tlsPlaintext.data()
     }
 
     override fun ClientHello(): ByteArray = makeClientHello()

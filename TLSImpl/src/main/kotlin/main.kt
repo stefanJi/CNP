@@ -17,15 +17,10 @@ fun tlsHandshake(host: String) {
     os.write(clientReqMaker.makeClientHello())
 
     try {
-        val type = ins.read()
-        println("${System.currentTimeMillis()} type: $type")
-        val contentType = ContentType.values().find { type == it.type.toInt() }
-            ?: error("Not found match ContentType. $type")
-        val major = ins.read()
-        val minor = ins.read()
-        val contentLength = ins.readUint16()
-        println("type: $contentType major: $major minor: $minor len: $contentLength")
-
+        val bufferIns = BufferedInputStream(ins)
+        while (true) {
+            ServerResponse1().parse(bufferIns)
+        }
     } catch (e: Exception) {
         e.printStackTrace()
     }
