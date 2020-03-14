@@ -36,8 +36,8 @@ Application Data             <------->     Application Data
 ## Handle Server Flow Parse
 
 - [x] Server Hello
-- [ ] Certificate
-- [ ] ServerKeyExchang
+- [x] Certificate
+- [x] ServerKeyExchang
 - [x] ServerHelloDone
 - [ ] ChangeCipherSpec
 - [ ] Finished
@@ -98,3 +98,7 @@ fun InputStream.readU32(): Int {
     return (read() and 0xFF shl 24) or (read() and 0xFF shl 16) or (read() and 0xFF shl 8) or (read() and 0xFF)
 }
 ```
+
+## Reference
+
+- https://ciphersuite.info/cs/

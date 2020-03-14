@@ -1,8 +1,7 @@
 package model
 
-import Content
-import HandshakeType
-import Parseable
+import Sendable
+import Receivable
 import putU24
 import putU8
 import readU24
@@ -16,12 +15,12 @@ import java.nio.ByteBuffer
  *  certificate_request(13), server_hello_done(14),
  *  certificate_verify(15), client_key_exchange(16),
  *  finished(20), (255)
- *} HandshakeType;
+ *} model.HandshakeType;
  *
  *struct {
- *  HandshakeType msg_type;    /* handshake type */
+ *  model.HandshakeType msg_type;    /* handshake type */
  *    uint24 length;             /* bytes in message */
- *    select (HandshakeType) {
+ *    select (model.HandshakeType) {
  *    case hello_request:       HelloRequest;
  *    case client_hello:        tls_flow.ClientHello;
  *    case server_hello:        tls_flow.ServerHello;
@@ -35,11 +34,11 @@ import java.nio.ByteBuffer
  *  } body;
  *} Handshake;
  */
-class HandshakeData : Content, Parseable {
+class HandshakeData : Sendable, Receivable {
 
     lateinit var handshakeType: HandshakeType.Type
         private set
-    var length: Int = 0
+    var contentLength: Int = 0
         private set
     private lateinit var body: ByteArray
 
@@ -48,21 +47,21 @@ class HandshakeData : Content, Parseable {
     constructor(handshakeType: HandshakeType.Type, body: ByteArray) {
         this.body = body
         this.handshakeType = handshakeType
-        this.length = body.size
+        this.contentLength = body.size
     }
 
     override fun data(): ByteArray {
         return ByteBuffer.allocate(size()).apply {
             putU8(handshakeType.value)
-            putU24(length)
+            putU24(contentLength)
             put(body)
         }.array()
     }
 
     override fun size(): Int = 1/*msg type uint8*/ + 3 /*length uint24*/ + body.size
 
-    override fun parse(ins: InputStream) {
-        handshakeType = HandshakeType().apply { parse(ins) }.type
-        length = ins.readU24()
+    override fun parse(ins: InputStream, length: Int) {
+        handshakeType = HandshakeType().apply { parse(ins, 1) }.type
+        contentLength = ins.readU24()
     }
 }

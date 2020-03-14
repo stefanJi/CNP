@@ -1,6 +1,9 @@
+package model
+
+import Receivable
 import java.io.InputStream
 
-class HandshakeType : Parseable {
+class HandshakeType : Receivable {
     enum class Type(val value: Int) {
         hello_request(0),
         client_hello(1),
@@ -15,8 +18,12 @@ class HandshakeType : Parseable {
     }
 
     lateinit var type: Type
-    override fun parse(ins: InputStream) {
+    override fun parse(ins: InputStream, length: Int) {
         val typeValue = ins.read()
-        type = Type.values().find { it.value == typeValue } ?: error("Not found HandshakeType($typeValue)")
+        type = Type.values().find { it.value == typeValue } ?: error("Not found model.HandshakeType($typeValue)")
+    }
+
+    companion object {
+        const val SIZE = 1
     }
 }

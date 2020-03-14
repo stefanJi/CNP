@@ -1,7 +1,7 @@
 package model
 
-import Content
-import Parseable
+import Sendable
+import Receivable
 import putU16
 import readU16
 import java.io.InputStream
@@ -10,11 +10,11 @@ import java.nio.ByteBuffer
 /**
  * Create by StefanJi in 2020-03-12
  */
-class HelloExtension : Content, Parseable {
+class HelloExtension : Sendable, Receivable {
 
     var length: Int = 0
         private set
-    lateinit var extensions: Array<Extension>
+    var extensions: Array<Extension> = emptyArray()
         private set
 
     constructor()
@@ -24,7 +24,7 @@ class HelloExtension : Content, Parseable {
         this.length = extensions.sumBy { it.size() }
     }
 
-    class Extension : Content, Parseable {
+    class Extension : Sendable, Receivable {
         var type: Int = 0
             private set
         var length: Int = 0
@@ -47,9 +47,8 @@ class HelloExtension : Content, Parseable {
 
         override fun size(): Int = 2 /*type: u16*/ + 2 /*len u16*/ + data.size
 
-        override fun parse(ins: InputStream) {
+        override fun parse(ins: InputStream, length: Int) {
             type = ins.readU16()
-            length = ins.readU16()
             data = ByteArray(length).apply { ins.read(this) }
         }
 
@@ -68,19 +67,19 @@ class HelloExtension : Content, Parseable {
     override fun size(): Int = 2/* extension_data length: u16 */ +
             extensions.sumBy { it.size() }
 
-    override fun parse(ins: InputStream) {
-        length = ins.readU16()
+    override fun parse(ins: InputStream, length: Int) {
         var offset = 0
         val es = arrayListOf<Extension>()
         while (offset < length) {
-            val extension = Extension().apply { parse(ins) }
-            offset += extension.size()
+            val extensionLen = ins.readU16()
+            val extension = Extension().apply { parse(ins, extensionLen) }
+            offset += extensionLen
             es.add(extension)
         }
         extensions = es.toTypedArray()
     }
 
     override fun toString(): String {
-        return "HelloExtension(length=$length, extensions=${extensions.contentToString()})"
+        return "HelloExtension( extensions=${extensions.contentToString()})"
     }
 }

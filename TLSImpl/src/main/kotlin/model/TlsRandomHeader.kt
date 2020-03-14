@@ -1,13 +1,13 @@
 package model
 
-import Content
-import Parseable
+import Receivable
+import Sendable
 import putU32
 import readU32
 import java.io.InputStream
 import java.nio.ByteBuffer
 
-class TlsRandomHeader : Content, Parseable {
+class TlsRandomHeader : Sendable, Receivable {
 
     var time: Int = 0
         private set
@@ -27,11 +27,15 @@ class TlsRandomHeader : Content, Parseable {
         }.array()
     }
 
-    override fun size(): Int = 4 /*gmt unit time*/ + 28 /*random*/
+    override fun size(): Int = SIZE
 
-    override fun parse(ins: InputStream) {
+    override fun parse(ins: InputStream, length: Int) {
         time = ins.readU32()
         randomValue = ByteArray(28)
         ins.read(randomValue)
+    }
+
+    companion object {
+        const val SIZE = 4 /*gmt unit time*/ + 28 /*random*/
     }
 }

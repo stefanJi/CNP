@@ -1,7 +1,7 @@
 package model
 
-import Content
-import Parseable
+import Sendable
+import Receivable
 import putU8
 import readU8
 import java.io.InputStream
@@ -10,7 +10,7 @@ import java.nio.ByteBuffer
 /**
  * Create by StefanJi in 2020-03-13
  */
-class CompressionMethod : Content, Parseable {
+class CompressionMethod : Sendable, Receivable {
 
     constructor()
 
@@ -25,7 +25,7 @@ class CompressionMethod : Content, Parseable {
         NULL(0)
     }
 
-    override fun parse(ins: InputStream) {
+    override fun parse(ins: InputStream, length: Int) {
         val typeV = ins.readU8()
         type = Type.values().find { it.value == typeV } ?: error("Not found match compression method($typeV)")
     }

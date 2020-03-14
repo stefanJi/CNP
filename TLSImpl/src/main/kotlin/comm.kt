@@ -1,10 +1,14 @@
 import java.io.InputStream
 import java.nio.ByteBuffer
 
-interface Content {
+interface Sendable {
     fun data(): ByteArray
 
     fun size(): Int
+}
+
+interface Receivable {
+    fun parse(ins: InputStream, length: Int)
 }
 
 interface ClientFlow {
@@ -27,34 +31,6 @@ interface ServerFlow {
     fun Finished(): ByteArray
     fun ApplicationData(): ByteArray
 }
-
-interface Parseable {
-    fun parse(ins: InputStream)
-}
-
-/*
-* TLS Version v1.2(3,3)
- */
-const val TLS_VERSION_MAJOR = 3
-const val TLS_VERSION_MINOR = 3
-
-class ContentType : Parseable {
-
-    lateinit var type: Type
-
-    enum class Type(val value: Int) {
-        change_cipher_spec(20),
-        alert(21),
-        handshake(22),
-        application_data(23)
-    }
-
-    override fun parse(ins: InputStream) {
-        val typeValue = ins.read()
-        type = Type.values().find { it.value == typeValue } ?: error("Not found match ContentType($typeValue)")
-    }
-}
-
 
 //region read extensions
 

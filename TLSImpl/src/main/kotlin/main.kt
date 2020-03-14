@@ -13,15 +13,15 @@ fun tlsHandshake(host: String) {
     val os = tcpSocket.getOutputStream() /*server's input*/
     val ins = tcpSocket.getInputStream() /*server's output*/
 
-    val clientReqMaker = ClientReqMaker()
-    os.write(clientReqMaker.makeClientHello())
+    val reqMaker = ClientReqMaker()
+    val respParser = ServerRespParser()
 
     try {
-        val serverResponse1 = ServerResponse1()
-        val bufferIns = BufferedInputStream(ins)
-        while (true) {
-            serverResponse1.parse(bufferIns)
-        }
+        /*step1: send: client_hello*/
+        os.write(reqMaker.makeClientHello())
+        /*step2: receive: server_hello, server certificates, server key exchange, ...*/
+        respParser.parse(BufferedInputStream(ins))
+        /*step3: send: client certificates*/
     } catch (e: Exception) {
         e.printStackTrace()
     }

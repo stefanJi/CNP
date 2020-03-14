@@ -1,8 +1,6 @@
 package model
 
-import Content
-import ContentType
-import Parseable
+import Sendable
 import putU16
 import putU8
 import readU16
@@ -19,25 +17,28 @@ import java.nio.ByteBuffer
  * enum {
  *     change_cipher_spec(20), alert(21), handshake(22),
  *     application_data(23), (255)
- * } ContentType;
+ * } model.ContentType;
  *
  * struct {
- *     ContentType type;
+ *     model.ContentType type;
  *     ProtocolVersion version;
  *     uint16 length;
  *     opaque fragment[TLSPlaintext.length];
  * } TLSPlaintext;
  * </pre>
  */
-class TLSPlaintext : Content, Parseable {
+class TLSPlaintext : Sendable {
 
-    var contentType: ContentType.Type
+    lateinit var contentType: ContentType.Type
         private set
-    var version: Version.Desc
+    lateinit var version: Version.Desc
         private set
-    var contentLength: Int
+    var contentLength: Int = 0
         private set
-    private var fragment: ByteArray
+    var fragment: ByteArray = ByteArray(0)
+        private set
+
+    constructor()
 
     constructor(contentType: ContentType.Type, version: Version.Desc, fragment: ByteArray) {
         this.contentType = contentType
@@ -59,9 +60,9 @@ class TLSPlaintext : Content, Parseable {
     override fun size(): Int = 1/*content type uint8*/ + 1/*major version uint8*/ +
             1/*minor version unit8*/ + 2/*fragment length uint16*/ + fragment.size
 
-    override fun parse(ins: InputStream) {
-        contentType = ContentType().apply { parse(ins) }.type
-        version = Version().apply { parse(ins) }.desc
+    fun parse(ins: InputStream) {
+        contentType = ContentType().apply { parse(ins, ContentType.SIZE) }.type
+        version = Version().apply { parse(ins, ContentType.SIZE) }.desc
         contentLength = ins.readU16()
     }
 }

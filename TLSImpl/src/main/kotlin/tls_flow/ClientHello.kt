@@ -1,14 +1,12 @@
 package tls_flow
 
-import Content
-import Parseable
-import putU16
-import putU8
+import Sendable
 import model.CipherSuite
 import model.CompressionMethod
 import model.TlsRandomHeader
 import model.Version
-import java.io.InputStream
+import putU16
+import putU8
 import java.nio.ByteBuffer
 
 /**
@@ -26,7 +24,7 @@ import java.nio.ByteBuffer
  *  };
  *} tls_flow.ClientHello;
  */
-class ClientHello : Content, Parseable {
+class ClientHello : Sendable {
 
     constructor()
 
@@ -82,6 +80,4 @@ class ClientHello : Content, Parseable {
             1 /*compression len u8*/ + compressionMethodsLen +
             2 /*extension length u16*/
 
-    override fun parse(ins: InputStream) {
-    }
 }
