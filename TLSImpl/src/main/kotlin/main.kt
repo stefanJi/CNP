@@ -19,9 +19,17 @@ fun tlsHandshake(host: String) {
     try {
         /*step1: send: client_hello*/
         os.write(reqMaker.makeClientHello())
-        /*step2: receive: server_hello, server certificates, server key exchange, ...*/
+        /*step2: receive: server_hello, server certificates, server_key_exchange, ..., server_hello_done*/
         respParser.parse(BufferedInputStream(ins))
-        /*step3: send: client certificates*/
+        /*step3: send: client_key_exchange*/
+        os.write(reqMaker.ClientKeyExchange())
+        /*step4: send: client_change_cipher_spec*/
+        os.write(reqMaker.ChangeCipherSpec())
+        /*step5: send: client finished*/
+        os.write(reqMaker.Finished())
+        /*step6: receive: server_change_cipher_spec, server finished*/
+        TODO()
+        /*handshake finish*/
     } catch (e: Exception) {
         e.printStackTrace()
     }

@@ -3,6 +3,7 @@ package model
 import Receivable
 import Sendable
 import putU16
+import putU8
 import readU16
 import readU8
 import java.io.InputStream
@@ -124,7 +125,7 @@ enum class HashAlgorithm {
     SHA256
 }
 
-class ECDHEAlgorithm : Receivable {
+class ECDHEAlgorithm : Receivable, Sendable {
     var curveType: Int = 0 /*u8*/
         private set
     var namedCurve: Int = 0 /*u16*/
@@ -140,6 +141,16 @@ class ECDHEAlgorithm : Receivable {
     var signature: ByteArray = ByteArray(0)
         private set
 
+    constructor()
+
+    /**
+     * Use for client key exchange message
+     */
+    constructor(pubKey: ByteArray) {
+        this.pubKey = pubKey
+        this.pubKeyLength = pubKey.size
+    }
+
     override fun parse(ins: InputStream, length: Int) {
         curveType = ins.readU8()
         namedCurve = ins.readU16()
@@ -149,6 +160,13 @@ class ECDHEAlgorithm : Receivable {
         signatureLength = ins.readU16()
         signature = ByteArray(signatureLength).apply { ins.read(this) }
     }
+
+    override fun data(): ByteArray = ByteBuffer.allocate(size()).apply {
+        putU8(pubKeyLength)
+        put(pubKey)
+    }.array()
+
+    override fun size(): Int = 1 + pubKeyLength
 
     override fun toString(): String {
         return "ECDHEAlgorithm(curveType=$curveType, namedCurve=$namedCurve, pubKeyLength=$pubKeyLength, pubKey=${pubKey.contentToString()}, signatureAlgorithm=$signatureAlgorithm, signatureLength=$signatureLength, signature=${signature.contentToString()})"

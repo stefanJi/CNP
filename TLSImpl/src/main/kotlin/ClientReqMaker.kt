@@ -1,5 +1,7 @@
 import model.*
+import java.lang.Exception
 import kotlin.random.Random
+import util.PRF
 
 /**
  * Create by StefanJi in 2020-03-10
@@ -38,7 +40,14 @@ class ClientReqMaker : ClientFlow {
     }
 
     override fun ClientKeyExchange(): ByteArray {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val ecdh = ECDHEAlgorithm(ByteArray(65).apply { java.util.Random(65).nextBytes(this) })
+        val handshakeData = HandshakeData(HandshakeType.Type.client_key_exchange, ecdh.data())
+        val tlsPlaintext = TLSPlaintext(
+            ContentType.Type.handshake,
+            Version.Desc.V1_2,
+            handshakeData.data()
+        )
+        return tlsPlaintext.data()
     }
 
     override fun CertificateVerify(): ByteArray {
@@ -46,11 +55,34 @@ class ClientReqMaker : ClientFlow {
     }
 
     override fun ChangeCipherSpec(): ByteArray {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val tlsPlaintext = TLSPlaintext(
+            ContentType.Type.change_cipher_spec,
+            Version.Desc.V1_2,
+            ByteArray(1) { 1 }
+        )
+        return tlsPlaintext.data()
     }
 
     override fun Finished(): ByteArray {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        // RPF(master_secret, finished_label, hash(handshake_message))
+        // handshake_message: All of the data from all messages in this handshake (not
+        //including any HelloRequest messages) up to, but not including,
+        //this message. This is only data visible at the handshake layer
+        //and does not include record layer headers
+        val masterSecret = ByteArray(20)//todo
+        val finishedLeable = "client finished".toByteArray(Charsets.UTF_8)
+        val finished = ByteArray(40)
+        try {
+            PRF.computePRF(finished, masterSecret, finishedLeable, ByteArray(0))
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        val tlsPlaintext = TLSPlaintext(
+            ContentType.Type.handshake,
+            Version.Desc.V1_2,
+            finished
+        )
+        return tlsPlaintext.data()
     }
 
     override fun ApplicationData(): ByteArray {
