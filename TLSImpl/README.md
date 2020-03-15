@@ -123,18 +123,18 @@ fun ByteBuffer.putU8(value: Int) = run {
 }
 
 fun ByteBuffer.putU16(value: Int) = run {
-    put((value shr 8 and 0xFF).toByte())
+    put((value shr 8).toByte())
     put((value and 0xFF).toByte())
 }
 
 fun ByteBuffer.putU24(value: Int) = run {
-    put((value shr 16 and 0xFF).toByte())
+    put((value shr 16).toByte())
     put((value shr 8 and 0xFF).toByte())
     put((value and 0xFF).toByte())
 }
 
 fun ByteBuffer.putU32(value: Int) = run {
-    put((value shr 24 and 0xFF).toByte())
+    put((value shr 24).toByte())
     put((value shr 16 and 0xFF).toByte())
     put((value shr 8 and 0xFF).toByte())
     put((value and 0xFF).toByte())
@@ -143,15 +143,15 @@ fun ByteBuffer.putU32(value: Int) = run {
 fun InputStream.readU8() = read()
 
 fun InputStream.readU16(): Int {
-    return (read() and 0xFF shl 8) or (read() and 0xFF)
+    return (read() and 0xFF shl 8) or (read())
 }
 
 fun InputStream.readU24(): Int {
-    return (read() and 0xFF shl 16) or (read() and 0xFF shl 8) or (read() and 0xFF)
+    return (read() and 0xFF shl 16) or (read() and 0xFF shl 8) or (read())
 }
 
 fun InputStream.readU32(): Int {
-    return (read() and 0xFF shl 24) or (read() and 0xFF shl 16) or (read() and 0xFF shl 8) or (read() and 0xFF)
+    return (read() and 0xFF shl 24) or (read() and 0xFF shl 16) or (read() and 0xFF shl 8) or (read())
 }
 ```
 
