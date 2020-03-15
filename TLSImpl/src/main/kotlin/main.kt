@@ -1,3 +1,4 @@
+import model.ECDHEAlgorithm
 import java.io.BufferedInputStream
 import java.net.Inet4Address
 import java.net.InetSocketAddress
@@ -19,14 +20,21 @@ fun tlsHandshake(host: String) {
     try {
         /*step1: send: client_hello*/
         os.write(reqMaker.makeClientHello())
+
         /*step2: receive: server_hello, server certificates, server_key_exchange, ..., server_hello_done*/
         respParser.parse(BufferedInputStream(ins))
+
         /*step3: send: client_key_exchange*/
+        val serverCertificates = respParser.certificates.certificates
+        val ecdheAlgorithm = respParser.serverKeyExchange.keyExchangeAlgorithm.algorithm as ECDHEAlgorithm
         os.write(reqMaker.ClientKeyExchange())
+
         /*step4: send: client_change_cipher_spec*/
         os.write(reqMaker.ChangeCipherSpec())
+
         /*step5: send: client finished*/
         os.write(reqMaker.Finished())
+
         /*step6: receive: server_change_cipher_spec, server finished*/
         TODO()
         /*handshake finish*/

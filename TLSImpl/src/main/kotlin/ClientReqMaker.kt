@@ -1,7 +1,9 @@
 import model.*
-import java.lang.Exception
-import kotlin.random.Random
 import util.PRF
+import java.security.KeyPairGenerator
+import java.security.spec.ECGenParameterSpec
+import kotlin.random.Random
+
 
 /**
  * Create by StefanJi in 2020-03-10
@@ -40,7 +42,17 @@ class ClientReqMaker : ClientFlow {
     }
 
     override fun ClientKeyExchange(): ByteArray {
-        val ecdh = ECDHEAlgorithm(ByteArray(65).apply { java.util.Random(65).nextBytes(this) })
+        //The client's Diffie-Hellman public value (Yc).
+        //TODO ECDHE_RSA
+        val ecSpec = ECGenParameterSpec("secp256r1")
+        val kf = KeyPairGenerator.getInstance("EC")
+        kf.initialize(ecSpec)
+        val keyPair = kf.generateKeyPair()
+        val priv = keyPair.private
+        val pub = keyPair.public
+
+        val yc = ByteArray(65).apply { Random(65).nextBytes(this) }
+        val ecdh = ECDHEAlgorithm(yc)
         val handshakeData = HandshakeData(HandshakeType.Type.client_key_exchange, ecdh.data())
         val tlsPlaintext = TLSPlaintext(
             ContentType.Type.handshake,
