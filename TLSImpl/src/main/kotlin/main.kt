@@ -27,7 +27,7 @@ fun tlsHandshake(host: String) {
         /*step3: send: client_key_exchange*/
         val serverCertificates = respParser.certificates.certificates
         val ecdheAlgorithm = respParser.serverKeyExchange.keyExchangeAlgorithm.algorithm as ECDHEAlgorithm
-        os.write(reqMaker.ClientKeyExchange())
+        os.write(reqMaker.ClientKeyExchange(respParser.serverKeyExchange))
 
         /*step4: send: client_change_cipher_spec*/
         os.write(reqMaker.ChangeCipherSpec())
@@ -36,7 +36,7 @@ fun tlsHandshake(host: String) {
         os.write(reqMaker.Finished())
 
         /*step6: receive: server_change_cipher_spec, server finished*/
-        TODO()
+        respParser.parse(ins)
         /*handshake finish*/
     } catch (e: Exception) {
         e.printStackTrace()

@@ -2,10 +2,12 @@ import model.ContentType
 import model.HandshakeData
 import model.HandshakeType
 import model.TLSPlaintext
+import tls_flow.Alert
 import tls_flow.Certificates
 import tls_flow.ServerHello
 import tls_flow.ServerKeyExchange
 import java.io.InputStream
+import java.lang.RuntimeException
 
 /**
  * Create by StefanJi in 2020-03-13
@@ -16,6 +18,8 @@ class ServerRespParser {
     lateinit var certificates: Certificates
         private set
     lateinit var serverKeyExchange: ServerKeyExchange
+        private set
+    var alert: Alert? = null
         private set
 
     fun parse(ins: InputStream) {
@@ -74,7 +78,12 @@ class ServerRespParser {
                     TODO()
                 }
                 ContentType.Type.alert -> {
-                    TODO()
+                    println("handle alert")
+                    alert = Alert().apply { parse(ins, tlsPlaintext.contentLength) }
+                    if (alert?.level == Alert.Level.fatal) {
+                        throw RuntimeException("Server alert a fatal signal. ${alert?.desc?.name}")
+                    }
+                    println("handle alert [done]")
                 }
             }
         }

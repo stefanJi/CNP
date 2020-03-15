@@ -1,3 +1,4 @@
+import tls_flow.ServerKeyExchange
 import java.io.InputStream
 import java.nio.ByteBuffer
 
@@ -14,7 +15,7 @@ interface Receivable {
 interface ClientFlow {
     fun ClientHello(): ByteArray
     fun Certificate(): ByteArray
-    fun ClientKeyExchange(): ByteArray
+    fun ClientKeyExchange(serverKeyExchange: ServerKeyExchange): ByteArray
     fun CertificateVerify(): ByteArray
     fun ChangeCipherSpec(): ByteArray
     fun Finished(): ByteArray

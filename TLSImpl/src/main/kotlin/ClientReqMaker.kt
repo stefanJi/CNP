@@ -1,5 +1,5 @@
 import model.*
-import util.PRF
+import tls_flow.ServerKeyExchange
 import java.security.KeyPairGenerator
 import java.security.spec.ECGenParameterSpec
 import kotlin.random.Random
@@ -41,24 +41,30 @@ class ClientReqMaker : ClientFlow {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun ClientKeyExchange(): ByteArray {
-        //The client's Diffie-Hellman public value (Yc).
-        //TODO ECDHE_RSA
+    /**
+     * https://tools.ietf.org/html/rfc4492#section-5.7
+     */
+    override fun ClientKeyExchange(serverKeyExchange: ServerKeyExchange): ByteArray {
+        val ec = KeyPairGenerator.getInstance("EC")
         val ecSpec = ECGenParameterSpec("secp256r1")
-        val kf = KeyPairGenerator.getInstance("EC")
-        kf.initialize(ecSpec)
-        val keyPair = kf.generateKeyPair()
+        ec.initialize(ecSpec)
+        val keyPair = ec.generateKeyPair()
         val priv = keyPair.private
         val pub = keyPair.public
+        println("public format:" + pub.format)
 
-        val yc = ByteArray(65).apply { Random(65).nextBytes(this) }
-        val ecdh = ECDHEAlgorithm(yc)
-        val handshakeData = HandshakeData(HandshakeType.Type.client_key_exchange, ecdh.data())
-        val tlsPlaintext = TLSPlaintext(
-            ContentType.Type.handshake,
-            Version.Desc.V1_2,
-            handshakeData.data()
-        )
+        // Generate ephemeral ECDH keypair
+        val kpg: KeyPairGenerator = KeyPairGenerator.getInstance("EC")
+        kpg.initialize(256) /*for secp256r1*/
+        val kp = kpg.generateKeyPair()
+        val ourPk = kp.public.encoded
+        val bobPublicKey = ourPk.copyOfRange(ourPk.size - 65, ourPk.size)
+
+        //TODO generate share secret
+
+        // send to server our public key
+        val handshakeData = HandshakeData(HandshakeType.Type.client_key_exchange, ECDHEAlgorithm(bobPublicKey).data())
+        val tlsPlaintext = TLSPlaintext(ContentType.Type.handshake, Version.Desc.V1_2, handshakeData.data())
         return tlsPlaintext.data()
     }
 
