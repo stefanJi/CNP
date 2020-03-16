@@ -50,8 +50,9 @@ Application Data  <------->     Application Data
 
 https://tools.ietf.org/html/rfc5246#section-7.4.7
 
+There are two ways to generate premaster secret in `Client Key Exchange`:
 
-Two way to generate premaster secret: With `Client Key Exchange` message, the premaster secret is set, either by direct transmission of the RSA-encrypted secret or by the transmission of Diffie-Hellman parameters that will allow each side to agree upon the same premaster secret.
+With `Client Key Exchange` message, the premaster secret is set, either by direct transmission of the RSA-encrypted secret or by the transmission of Diffie-Hellman parameters that will allow each side to agree upon the same premaster secret.
 
 1. RSA
 
@@ -73,6 +74,7 @@ premaster_secret = RSA_decrypt(server_private_key, temp)
 2. ECDHE_RSA
 
 This key exchange algorithm is the same as ECDHE_ECDSA except that the server's certificate MUST contain an RSA public key authorized for signing, and that the signature in the ServerKeyExchange message must be computed with the corresponding RSA private key.  The server certificate MUST be signed with RSA
+
 First sever send ECDH parameters in certificate or server_key_exchange message.
 
 - curve type
