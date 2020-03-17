@@ -73,14 +73,25 @@ premaster_secret = RSA_decrypt(server_private_key, temp)
 
 2. ECDHE_RSA
 
-This key exchange algorithm is the same as ECDHE_ECDSA except that the server's certificate MUST contain an RSA public key authorized for signing, and that the signature in the ServerKeyExchange message must be computed with the corresponding RSA private key.  The server certificate MUST be signed with RSA
+This key exchange algorithm is the same as ECDHE_ECDSA except that the server's certificate MUST contain an RSA public key authorized for signing, and that the signature in the ServerKeyExchange message must be computed with the corresponding RSA private key.  The server certificate MUST be signed with RSA.
 
 First sever send ECDH parameters in certificate or server_key_exchange message.
 
-- curve type
-- public key
-- signature
+- curve type: curve algorithm type
+- public key: public key for DH
+- signature: signature for verify server's DH public key, client use server's RSA public key in certificate and signature to verify DH public key
 
+Then client will generate a DH public key to curve algorithm, send the public key to server:
+
+```
+client_public_key, client_private_key = EC(curve_algorithm)
+```
+
+**premaster_secret will generate by server and client by him self.**
+
+```
+premaster_secret = //TODO
+```
 
 #### master secret
 

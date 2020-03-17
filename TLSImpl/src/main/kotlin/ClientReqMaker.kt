@@ -1,7 +1,6 @@
 import model.*
 import tls_flow.ServerKeyExchange
 import java.security.KeyPairGenerator
-import java.security.spec.ECGenParameterSpec
 import kotlin.random.Random
 
 
@@ -45,27 +44,28 @@ class ClientReqMaker : ClientFlow {
      * https://tools.ietf.org/html/rfc4492#section-5.7
      */
     override fun ClientKeyExchange(serverKeyExchange: ServerKeyExchange): ByteArray {
-        val ec = KeyPairGenerator.getInstance("EC")
-        val ecSpec = ECGenParameterSpec("secp256r1")
-        ec.initialize(ecSpec)
-        val keyPair = ec.generateKeyPair()
-        val priv = keyPair.private
-        val pub = keyPair.public
-        println("public format:" + pub.format)
+        if (serverKeyExchange.keyExchangeAlgorithm.algorithm is ECDHEAlgorithm) {
+            val serverECDHEAlgorithm = serverKeyExchange.keyExchangeAlgorithm.algorithm as ECDHEAlgorithm
+            val alicePubKey = serverECDHEAlgorithm.pubKey
+            val signature = serverECDHEAlgorithm.signature
 
-        // Generate ephemeral ECDH keypair
-        val kpg: KeyPairGenerator = KeyPairGenerator.getInstance("EC")
-        kpg.initialize(256) /*for secp256r1*/
-        val kp = kpg.generateKeyPair()
-        val ourPk = kp.public.encoded
-        val bobPublicKey = ourPk.copyOfRange(ourPk.size - 65, ourPk.size)
+            // Generate ephemeral ECDH keypair
+            val kpg: KeyPairGenerator = KeyPairGenerator.getInstance("EC")
+            kpg.initialize(256) /*for secp256r1*/
+            val kp = kpg.generateKeyPair()
+            val ourPk = kp.public.encoded
+            val bobPublicKey = ourPk.copyOfRange(ourPk.size - 65, ourPk.size)
 
-        //TODO generate share secret
+            //TODO generate secret
 
-        // send to server our public key
-        val handshakeData = HandshakeData(HandshakeType.Type.client_key_exchange, ECDHEAlgorithm(bobPublicKey).data())
-        val tlsPlaintext = TLSPlaintext(ContentType.Type.handshake, Version.Desc.V1_2, handshakeData.data())
-        return tlsPlaintext.data()
+            // send to server our public key
+            val handshakeData =
+                HandshakeData(HandshakeType.Type.client_key_exchange, ECDHEAlgorithm(bobPublicKey).data())
+            val tlsPlaintext = TLSPlaintext(ContentType.Type.handshake, Version.Desc.V1_2, handshakeData.data())
+            return tlsPlaintext.data()
+        } else {
+            throw NotImplementedError("Not implement this key exchange algorithm")
+        }
     }
 
     override fun CertificateVerify(): ByteArray {
