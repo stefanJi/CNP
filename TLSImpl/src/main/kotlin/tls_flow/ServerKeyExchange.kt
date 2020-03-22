@@ -1,15 +1,15 @@
 package tls_flow
 
-import model.KeyExchangeAlgorithm
+import model.CipherSuite
 import java.io.InputStream
 
 class ServerKeyExchange {
 
-    lateinit var keyExchangeAlgorithm: KeyExchangeAlgorithm
+    lateinit var cipherSuite: CipherSuite
         private set
 
-    fun parse(ins: InputStream, length: Int, keyExchangeAlgorithm: KeyExchangeAlgorithm) {
-        keyExchangeAlgorithm.algorithm.parse(ins, length)
-        this.keyExchangeAlgorithm = keyExchangeAlgorithm
+    fun parse(ins: InputStream, length: Int, type: CipherSuite) {
+        this.cipherSuite = type
+        this.cipherSuite.type.KeyExchange().algorithm.parse(ins, length)
     }
 }

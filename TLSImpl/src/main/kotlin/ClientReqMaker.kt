@@ -1,6 +1,9 @@
 import model.*
-import tls_flow.ServerKeyExchange
+import model.CipherSuite.Type
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.security.KeyPairGenerator
+import java.security.SecureRandom
+import java.security.spec.ECGenParameterSpec
 import kotlin.random.Random
 
 
@@ -22,7 +25,7 @@ class ClientReqMaker : ClientFlow {
         val clientHello = tls_flow.ClientHello(
             Version.Desc.V1_2,
             TlsRandomHeader(randomTime, random), sessionId,
-            CipherSuite.Type.values().map { CipherSuite(it) }.toTypedArray(),
+            Type.values().map { CipherSuite(it) }.toTypedArray(),
             arrayOf(CompressionMethod(CompressionMethod.Type.NULL))
         )
         val handshakeData = HandshakeData(HandshakeType.Type.client_hello, clientHello.data())
@@ -41,30 +44,61 @@ class ClientReqMaker : ClientFlow {
     }
 
     /**
-     * https://tools.ietf.org/html/rfc4492#section-5.7
+    https://tools.ietf.org/html/rfc4492#section-5.4
+
+    Actions of the sender:
+
+    The server selects elliptic curve domain parameters and an ephemeral
+    ECDH public key corresponding to these parameters according to the
+    ECKAS-DH1 scheme from IEEE 1363.  It conveys this information to
+    the client in the ServerKeyExchange message using the format defined
+    above.
+
+    Actions of the receiver:
+
+    The client verifies the signature (when present) and retrieves the
+    server's elliptic curve domain parameters and ephemeral ECDH public
+    key from the ServerKeyExchange message.  (A possible reason for a
+    fatal handshake failure is that the client's capabilities for
+    handling elliptic curves and point formats are exceeded;
+     *
+     *
+     *
+     * Alice: the server
+     * Bob:   the client
      */
-    override fun ClientKeyExchange(serverKeyExchange: ServerKeyExchange): ByteArray {
-        if (serverKeyExchange.keyExchangeAlgorithm.algorithm is ECDHEAlgorithm) {
-            val serverECDHEAlgorithm = serverKeyExchange.keyExchangeAlgorithm.algorithm as ECDHEAlgorithm
+    override fun ClientKeyExchange(serverCipherSuite: CipherSuite): ByteArray {
+        if (serverCipherSuite.type == Type.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) {
+            val serverECDHEAlgorithm = serverCipherSuite.type.KeyExchange().algorithm as ECDHEAlgorithm
+            val namedCurve = serverECDHEAlgorithm.namedCurve
+
+            /**
+             * signature = RSA(ClientHello.random + ServerHello.random + ServerKeyExchange.params)
+             */
             val alicePubKey = serverECDHEAlgorithm.pubKey
             val signature = serverECDHEAlgorithm.signature
+            //TODO verify the signature
 
             // Generate ephemeral ECDH keypair
-            val kpg: KeyPairGenerator = KeyPairGenerator.getInstance("EC")
-            kpg.initialize(256) /*for secp256r1*/
+            val kpg: KeyPairGenerator = KeyPairGenerator.getInstance("ECDH", BouncyCastleProvider.PROVIDER_NAME)
+            kpg.initialize(ECGenParameterSpec(namedCurve!!.name), SecureRandom())
             val kp = kpg.generateKeyPair()
-            val ourPk = kp.public.encoded
-            val bobPublicKey = ourPk.copyOfRange(ourPk.size - 65, ourPk.size)
+            println("[ClientKeyExchange] ${kp.public.algorithm}")
+            println("[ClientKeyExchange] bob: ${kp.public}")
+            println("[ClientKeyExchange] bob: ${kp.private}")
+            val bobPubKey = kp.public.encoded
+            val bobPriKey = kp.private.encoded
+            //TODO check there, why public key length not 256 bytes
 
             //TODO generate secret
 
-            // send to server our public key
+            // send my public key to server
             val handshakeData =
-                HandshakeData(HandshakeType.Type.client_key_exchange, ECDHEAlgorithm(bobPublicKey).data())
+                HandshakeData(HandshakeType.Type.client_key_exchange, ECDHEAlgorithm(bobPubKey).data())
             val tlsPlaintext = TLSPlaintext(ContentType.Type.handshake, Version.Desc.V1_2, handshakeData.data())
             return tlsPlaintext.data()
         } else {
-            throw NotImplementedError("Not implement this key exchange algorithm")
+            throw NotImplementedError("Not implement this CipherSuite")
         }
     }
 
@@ -87,11 +121,12 @@ class ClientReqMaker : ClientFlow {
         //including any HelloRequest messages) up to, but not including,
         //this message. This is only data visible at the handshake layer
         //and does not include record layer headers
-        val masterSecret = ByteArray(20)//todo
+        val masterSecret = ByteArray(20) //TODO generate master secret
         val finishedLeable = "client finished".toByteArray(Charsets.UTF_8)
         val finished = ByteArray(40)
         try {
-            PRF.computePRF(finished, masterSecret, finishedLeable, ByteArray(0))
+            TODO("encrypted handshake message")
+//            PRF.computePRF(finished, masterSecret, finishedLeable, ByteArray(0))
         } catch (e: Exception) {
             e.printStackTrace()
         }

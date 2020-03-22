@@ -1,3 +1,4 @@
+import model.CipherSuite
 import tls_flow.ServerKeyExchange
 import java.io.InputStream
 import java.nio.ByteBuffer
@@ -15,7 +16,7 @@ interface Receivable {
 interface ClientFlow {
     fun ClientHello(): ByteArray
     fun Certificate(): ByteArray
-    fun ClientKeyExchange(serverKeyExchange: ServerKeyExchange): ByteArray
+    fun ClientKeyExchange(serverCipherSuite: CipherSuite): ByteArray
     fun CertificateVerify(): ByteArray
     fun ChangeCipherSpec(): ByteArray
     fun Finished(): ByteArray

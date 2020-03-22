@@ -7,7 +7,6 @@ import tls_flow.Certificates
 import tls_flow.ServerHello
 import tls_flow.ServerKeyExchange
 import java.io.InputStream
-import java.lang.RuntimeException
 
 /**
  * Create by StefanJi in 2020-03-13
@@ -47,7 +46,7 @@ class ServerRespParser {
                         HandshakeType.Type.server_key_exchange -> {
                             println("server resp: server_key_exchange")
                             serverKeyExchange = ServerKeyExchange().apply {
-                                parse(ins, handshakeData.contentLength, serverHello.cipherSuite.type.KeyExchange())
+                                parse(ins, handshakeData.contentLength, serverHello.cipherSuite)
                             }
                             println("server resp: server_key_exchange [done]")
                         }
