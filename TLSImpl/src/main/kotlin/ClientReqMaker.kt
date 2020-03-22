@@ -1,9 +1,7 @@
 import model.*
 import model.CipherSuite.Type
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import java.security.KeyPairGenerator
-import java.security.SecureRandom
-import java.security.spec.ECGenParameterSpec
+import utils.ECDHNamedCurveUtil
+import utils.encodeLocal
 import kotlin.random.Random
 
 
@@ -14,6 +12,10 @@ class ClientReqMaker : ClientFlow {
     var randomTime = 0
         private set
     lateinit var random: ByteArray
+        private set
+    lateinit var preMasterSecret: ByteArray
+        private set
+    lateinit var masterSecret: ByteArray
         private set
 
     fun makeClientHello(): ByteArray {
@@ -70,7 +72,7 @@ class ClientReqMaker : ClientFlow {
     override fun ClientKeyExchange(serverCipherSuite: CipherSuite): ByteArray {
         if (serverCipherSuite.type == Type.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) {
             val serverECDHEAlgorithm = serverCipherSuite.type.KeyExchange().algorithm as ECDHEAlgorithm
-            val namedCurve = serverECDHEAlgorithm.namedCurve
+            val namedCurve = serverECDHEAlgorithm.namedCurve!!
 
             /**
              * signature = RSA(ClientHello.random + ServerHello.random + ServerKeyExchange.params)
@@ -80,25 +82,20 @@ class ClientReqMaker : ClientFlow {
             //TODO verify the signature
 
             // Generate ephemeral ECDH keypair
-            val kpg: KeyPairGenerator = KeyPairGenerator.getInstance("ECDH", BouncyCastleProvider.PROVIDER_NAME)
-            kpg.initialize(ECGenParameterSpec(namedCurve!!.name), SecureRandom())
-            val kp = kpg.generateKeyPair()
-            println("[ClientKeyExchange] ${kp.public.algorithm}")
-            println("[ClientKeyExchange] bob: ${kp.public}")
-            println("[ClientKeyExchange] bob: ${kp.private}")
-            val bobPubKey = kp.public.encoded
-            val bobPriKey = kp.private.encoded
-            //TODO check there, why public key length not 256 bytes
+            val kp = ECDHNamedCurveUtil.generateKeyPair(namedCurve)
+            val bobPubKey = kp.public.encodeLocal()
+            val bobPriKey = kp.private.encodeLocal()
 
-            //TODO generate secret
+            preMasterSecret = with(ECDHNamedCurveUtil) { agreementSecret(bobPriKey, alicePubKey, namedCurve) }
+            println("[ClientKeyExchange] premater_secret: ${preMasterSecret.contentToString()}")
 
-            // send my public key to server
+            // send bob public key to alice
             val handshakeData =
                 HandshakeData(HandshakeType.Type.client_key_exchange, ECDHEAlgorithm(bobPubKey).data())
             val tlsPlaintext = TLSPlaintext(ContentType.Type.handshake, Version.Desc.V1_2, handshakeData.data())
             return tlsPlaintext.data()
         } else {
-            throw NotImplementedError("Not implement this CipherSuite")
+            TODO("${serverCipherSuite.type} Not Support Now")
         }
     }
 

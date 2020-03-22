@@ -71,7 +71,8 @@ class ServerRespParser {
                     }
                 }
                 ContentType.Type.change_cipher_spec -> {
-                    TODO()
+                    println("server change_cipher_spec")
+                    println("server change_cipher_spec done")
                 }
                 ContentType.Type.application_data -> {
                     TODO()

@@ -64,7 +64,7 @@ Application Data  <------->     Application Data
 - [x] Certificate
 - [x] ServerKeyExchang
 - [x] ServerHelloDone
-- [ ] ChangeCipherSpec
+- [x] ChangeCipherSpec
 - [ ] Finished
 
 
@@ -110,7 +110,7 @@ First sever send ECDH parameters in certificate or server_key_exchange message.
 Then client will generate a DH public key to curve algorithm, send the public key to server:
 
 ```
-client_public_key, client_private_key = EC(curve_algorithm)
+client_public_key, client_private_key = ECDH(curve_algorithm)
 ```
 
 client and server generate the premaster_secret by him self.
