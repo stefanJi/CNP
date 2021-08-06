@@ -145,7 +145,7 @@ https://tools.ietf.org/html/rfc5246#section-5
 ### Finished Message
 
 ```
-finished_message_data = RPF(master_secret, finished_label, hash(handshake_message))
+finished_message_data = PRF(master_secret, finished_label, hash(handshake_message))
 ```
 
 - finished_label: `client finished` or `server finished`
